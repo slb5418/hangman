@@ -1,3 +1,4 @@
+require 'yaml'
 
 class Hangman
 	attr_accessor :secret_word, :number_of_wrong_guesses, :guesses
@@ -15,13 +16,16 @@ class Hangman
 			#2. display the number of guesses remaining and the correct letters
 			display_guesses_and_word()
 			#3. allow the player to guess a letter
-			guess = player_guess()
+			input = get_input()
+            while input == 'save'
+                input = get_input()
+            end
 			if check_win()
 				puts "\n#{@secret_word}"
 				puts "\nYou have won the game!\n"
 				exit()
 			end
-			@number_of_wrong_guesses -= 1 if not secret_word.split(//).include?(guess)
+			@number_of_wrong_guesses -= 1 if not secret_word.split(//).include?(input)
 		end
 		puts "\nOH NO! you are out of guesses"
 		puts "The secret word was:"
@@ -55,10 +59,14 @@ class Hangman
 	end
 
 	def get_input()
-		puts "\nPlease guess a letter! (type 'save' to save)"
+		puts "\nPlease guess a letter! (type 'save' at any time to save)"
 		input = gets.chomp()
-		input == 'save' ? save_game() : @guesses << input
-
+        if input == 'save'
+            save_game()
+        else
+            @guesses << input
+        end
+        return input
 	end
 
 	def check_win()
@@ -80,9 +88,19 @@ class Hangman
 end
 
 def load_game()
+    content = File.open('saved_data/hangman_save.yaml', 'r') { |file| file.read }
+    hangman = YAML.load(content)
+    puts "\nFile loaded!"
+    puts "Continuing play"
+    return hangman
 end
 
 def save_game()
+    Dir.mkdir("saved_data") unless Dir.exist? "saved_data"
+    filename = 'saved_data/hangman_save.yaml'
+    File.open(filename, 'w') do |file|
+        file.puts YAML.dump(self)
+    end
 end
 
 dictionary = File.readlines('5desk.txt')
@@ -91,9 +109,9 @@ puts "\n"*20 + "Welcome to hangman!"
 puts "Would you like to start a new game or load a saved game?"
 puts "Enter 'new' or 'load':"
 input = gets.chomp()
-until input == 'new' or 'load'
+until input == 'new' or input == 'load'
 	input = gets.chomp()
 end
-input == 'load'? load_game()
+hangman = input == 'load'? load_game() : Hangman.new(dictionary)
 
-hangman = Hangman.new(dictionary)
+hangman.play()

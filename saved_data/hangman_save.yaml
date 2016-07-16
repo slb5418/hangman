@@ -1,0 +1,6 @@
+--- !ruby/object:Hangman
+secret_word: uzbekistan
+number_of_wrong_guesses: 6
+guesses:
+- a
+- e
